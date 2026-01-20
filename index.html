@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>富翁模拟器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: #0d1117;
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      position: relative;
+      background: #0d1117;
+      overflow-x: hidden;
+    }
+
+    .scene {
+      display: none;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .scene.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 菜单场景 */
+    #menu-scene {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: bold;
+      color: #58a6ff;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #8b949e;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .philosophy {
+      font-size: 12px;
+      color: #f0883e;
+      margin-bottom: 25px;
+      padding: 10px;
+      background: rgba(240, 136, 62, 0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(240, 136, 62, 0.3);
+      max-width: 320px;
+    }
+
+    /* 设置表单 */
+    .setup-form {
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 20px;
+    }
+
+    .setup-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    .setup-label {
+      font-size: 14px;
+      color: #8b949e;
+      width: 80px;
+      text-align: right;
+    }
+
+    .setup-input {
+      flex: 1;
+      padding: 10px 12px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #e6edf3;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    .setup-input:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    .setup-input::placeholder {
+      color: #484f58;
+    }
+
+    .setup-unit {
+      font-size: 14px;
+      color: #8b949e;
+      width: 30px;
+    }
+
+    .btn {
+      background: #238636;
+      color: #fff;
+      border: none;
+      padding: 12px 32px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 8px 0;
+      transition: all 0.2s;
+      font-family: inherit;
+      min-width: 160px;
+    }
+
+    .btn:hover {
+      background: #2ea043;
+    }
+
+    .btn-secondary {
+      background: #21262d;
+      border: 1px solid #30363d;
+    }
+
+    .btn-secondary:hover {
+      background: #30363d;
+    }
+
+    .version {
+      position: absolute;
+      bottom: 20px;
+      color: #484f58;
+      font-size: 12px;
+    }
+
+    /* 游戏场景 */
+    #game-scene {
+      padding-top: 10px;
+    }
+
+    /* 顶部状态栏 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #21262d;
+      margin-bottom: 10px;
+    }
+
+    .time-info {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .age {
+      font-size: 22px;
+      font-weight: bold;
+      color: #58a6ff;
+    }
+
+    .month {
+      font-size: 14px;
+      color: #8b949e;
+    }
+
+    .stage-badge {
+      font-size: 12px;
+      color: #7ee787;
+      background: rgba(126, 231, 135, 0.15);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* 财务面板 */
+    .finance-panel {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .finance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .finance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .finance-item.full {
+      grid-column: 1 / -1;
+      border-top: 1px solid #21262d;
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+
+    .finance-label {
+      font-size: 12px;
+      color: #8b949e;
+    }
+
+    .finance-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .value-green { color: #3fb950; }
+    .value-blue { color: #58a6ff; }
+    .value-purple { color: #a371f7; }
+    .value-red { color: #f85149; }
+    .value-orange { color: #f0883e; }
+
+    /* 生活状态面板 */
+    .life-panel {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .life-tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      background: #21262d;
+      border-radius: 4px;
+      color: #8b949e;
+    }
+
+    .life-tag.active {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+    }
+
+    /* 技能面板 */
+    .skills-panel {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .skills-title {
+      font-size: 11px;
+      color: #8b949e;
+      margin-bottom: 8px;
+    }
+
+    .skills-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .skill-item {
+      font-size: 11px;
+      padding: 3px 6px;
+      background: #21262d;
+      border-radius: 3px;
+      color: #8b949e;
+    }
+
+    .skill-item.active {
+      background: rgba(240, 136, 62, 0.15);
+      color: #f0883e;
+    }
+
+    /* 持仓面板 */
+    .holdings-panel {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .holdings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .holdings-title {
+      font-size: 11px;
+      color: #8b949e;
+    }
+
+    .holdings-summary {
+      font-size: 11px;
+    }
+
+    .holdings-summary .profit {
+      color: #3fb950;
+    }
+
+    .holdings-summary .loss {
+      color: #f85149;
+    }
+
+    .holdings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .holding-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: #21262d;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .holding-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .holding-name {
+      color: #e6edf3;
+      font-weight: 500;
+    }
+
+    .holding-detail {
+      color: #8b949e;
+      font-size: 10px;
+    }
+
+    .holding-value {
+      text-align: right;
+    }
+
+    .holding-amount {
+      color: #58a6ff;
+      font-weight: 500;
+    }
+
+    .holding-profit {
+      font-size: 10px;
+    }
+
+    .holding-profit.positive {
+      color: #3fb950;
+    }
+
+    .holding-profit.negative {
+      color: #f85149;
+    }
+
+    .holding-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .holding-btn {
+      font-size: 10px;
+      padding: 2px 6px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .holding-btn.sell {
+      background: rgba(248, 81, 73, 0.2);
+      color: #f85149;
+    }
+
+    .holding-btn.add {
+      background: rgba(63, 185, 80, 0.2);
+      color: #3fb950;
+    }
+
+    .holdings-empty {
+      color: #8b949e;
+      font-size: 11px;
+      text-align: center;
+      padding: 10px;
+    }
+
+    /* 时间进度条 */
+    .time-bar {
+      background: #21262d;
+      height: 6px;
+      border-radius: 3px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    .time-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #238636, #3fb950);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .time-hint {
+      font-size: 11px;
+      color: #8b949e;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    /* 事件卡片 */
+    .event-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .event-category {
+      font-size: 11px;
+      color: #8b949e;
+      background: #21262d;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .event-time {
+      font-size: 11px;
+      color: #f0883e;
+    }
+
+    .event-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #58a6ff;
+      margin-bottom: 8px;
+    }
+
+    .event-desc {
+      font-size: 13px;
+      color: #c9d1d9;
+      line-height: 1.6;
+    }
+
+    /* 选项 */
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .choice-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 12px 14px;
+      font-size: 13px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      text-align: left;
+    }
+
+    .choice-btn:hover {
+      background: #30363d;
+      border-color: #58a6ff;
+    }
+
+    .choice-hint {
+      font-size: 11px;
+      color: #8b949e;
+      margin-top: 4px;
+    }
+
+    /* 动作菜单 - 手风琴样式 */
+    .action-category {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .action-category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .action-category-header:hover {
+      background: #21262d;
+    }
+
+    .action-category-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .action-category-arrow {
+      font-size: 12px;
+      color: #8b949e;
+      transition: transform 0.2s;
+    }
+
+    .action-category.expanded .action-category-arrow {
+      transform: rotate(180deg);
+    }
+
+    .actions-grid {
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 0 12px 12px 12px;
+    }
+
+    .action-category.expanded .actions-grid {
+      display: grid;
+    }
+
+    .action-btn {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .action-btn:hover:not(.disabled) {
+      background: #30363d;
+      border-color: #58a6ff;
+    }
+
+    .action-btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .action-name {
+      font-size: 13px;
+      color: #e6edf3;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .action-meta {
+      display: flex;
+      gap: 8px;
+      font-size: 10px;
+    }
+
+    .action-time {
+      color: #8b949e;
+      background: rgba(139, 148, 158, 0.15);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    .action-cost {
+      color: #f0883e;
+    }
+
+    /* 效果动画 */
+    .effects {
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .effect-item {
+      font-size: 13px;
+      font-weight: 600;
+      animation: floatUp 1.5s ease-out forwards;
+    }
+
+    .effect-positive { color: #3fb950; }
+    .effect-negative { color: #f85149; }
+    .effect-action { color: #f0883e; font-size: 14px; }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-15px); }
+    }
+
+    /* 结果描述文字 */
+    .result-text {
+      font-size: 14px;
+      color: #7ee787;
+      line-height: 1.7;
+      padding: 10px;
+      background: rgba(126, 231, 135, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid #3fb950;
+    }
+
+    /* 底部按钮 */
+    .bottom-bar {
+      margin-top: auto;
+      padding: 15px 0;
+    }
+
+    /* 加载动画 */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #58a6ff;
+      font-size: 13px;
+      padding: 20px;
+    }
+
+    .loading-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #58a6ff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 结局场景 */
+    #end-scene {
+      align-items: center;
+      text-align: center;
+      padding-top: 30px;
+    }
+
+    .end-title {
+      font-size: 26px;
+      color: #c9d1d9;
+      margin-bottom: 8px;
+    }
+
+    .end-subtitle {
+      font-size: 14px;
+      color: #8b949e;
+      margin-bottom: 20px;
+    }
+
+    .evaluation-card {
+      background: #161b22;
+      border: 2px solid;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .evaluation-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .evaluation-desc {
+      font-size: 13px;
+      color: #8b949e;
+      margin-bottom: 12px;
+    }
+
+    .evaluation-score {
+      font-size: 15px;
+      color: #f0883e;
+    }
+
+    .final-stats {
+      width: 100%;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .final-stats h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #8b949e;
+    }
+
+    .final-stat {
+      font-size: 13px;
+      margin: 6px 0;
+      padding: 8px 10px;
+      background: #161b22;
+      border-radius: 6px;
+    }
+
+    .life-log {
+      width: 100%;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .life-log h3 {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #8b949e;
+    }
+
+    .log-item {
+      font-size: 11px;
+      color: #8b949e;
+      margin: 4px 0;
+      padding-left: 8px;
+      border-left: 2px solid #30363d;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 菜单场景 -->
+    <div id="menu-scene" class="scene active">
+      <h1 class="title">富翁模拟器</h1>
+      <p class="subtitle">模拟你的投资理财之路<br>从现在到退休，你能积累多少财富？</p>
+
+      <div class="philosophy">
+        "投资不是赌博。只有在某个领域深耕细作、不断学习，才能获得稳定回报。靠运气赚钱的人不到10%。"
+      </div>
+
+      <div class="setup-form">
+        <div class="setup-row">
+          <label class="setup-label">起始年龄</label>
+          <input type="number" class="setup-input" id="input-age" value="22" min="18" max="60" placeholder="18-60">
+          <span class="setup-unit">岁</span>
+        </div>
+        <div class="setup-row">
+          <label class="setup-label">起始资产</label>
+          <input type="number" class="setup-input" id="input-wealth" value="1" min="0" max="10000" placeholder="万元">
+          <span class="setup-unit">万</span>
+        </div>
+      </div>
+
+      <button class="btn" id="btn-new-game">开始投资之旅</button>
+      <button class="btn btn-secondary" id="btn-continue" style="display:none;">继续游戏</button>
+      <p class="version">v3.0 AI模式</p>
+    </div>
+
+    <!-- 游戏场景 -->
+    <div id="game-scene" class="scene">
+      <div class="top-bar">
+        <div class="time-info">
+          <span class="age" id="player-age">25岁</span>
+          <span class="month" id="player-month">1月</span>
+        </div>
+        <span class="stage-badge" id="player-stage">成长期</span>
+      </div>
+
+      <div class="finance-panel">
+        <div class="finance-grid">
+          <div class="finance-item">
+            <span class="finance-label">💰 总资产</span>
+            <span class="finance-value value-green" id="val-wealth">¥0</span>
+          </div>
+          <div class="finance-item">
+            <span class="finance-label">💵 现金</span>
+            <span class="finance-value value-blue" id="val-cash">¥0</span>
+          </div>
+          <div class="finance-item">
+            <span class="finance-label">📈 年收入</span>
+            <span class="finance-value value-purple" id="val-income">¥0</span>
+          </div>
+          <div class="finance-item">
+            <span class="finance-label">📉 月支出</span>
+            <span class="finance-value value-orange" id="val-expense">¥0</span>
+          </div>
+          <div class="finance-item full" id="debt-item" style="display:none;">
+            <span class="finance-label">🏦 负债</span>
+            <span class="finance-value value-red" id="val-debt">¥0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="life-panel" id="life-tags">
+        <!-- 由 JS 动态生成 -->
+      </div>
+
+      <div class="skills-panel">
+        <div class="skills-title">📚 专业技能</div>
+        <div class="skills-grid" id="skills-grid">
+          <span class="skill-item">📊 股票 0</span>
+          <span class="skill-item">📈 基金 0</span>
+          <span class="skill-item">🏠 房产 0</span>
+          <span class="skill-item">₿ 加密 0</span>
+          <span class="skill-item">🏢 创业 0</span>
+          <span class="skill-item">💼 职场 0</span>
+        </div>
+      </div>
+
+      <div class="holdings-panel" id="holdings-panel" style="display:none;">
+        <div class="holdings-header">
+          <div class="holdings-title">📊 我的持仓</div>
+          <div class="holdings-summary" id="holdings-summary"></div>
+        </div>
+        <div class="holdings-list" id="holdings-list">
+          <div class="holdings-empty">暂无持仓</div>
+        </div>
+      </div>
+
+      <div class="time-bar">
+        <div class="time-bar-fill" id="time-fill" style="width: 0%"></div>
+      </div>
+      <div class="time-hint" id="time-text">1月 / 剩余12个月</div>
+
+      <div class="event-card">
+        <div class="event-header">
+          <span class="event-category" id="event-category">投资机会</span>
+        </div>
+        <div class="event-title" id="event-title">事件标题</div>
+        <div class="event-desc" id="event-desc">事件描述</div>
+      </div>
+
+      <div class="choices" id="choices"></div>
+
+      <div class="effects" id="effects"></div>
+
+      <div class="bottom-bar">
+        <button class="btn" id="btn-next-year" style="display:none;width:100%;">进入下一年 →</button>
+      </div>
+    </div>
+
+    <!-- 结局场景 -->
+    <div id="end-scene" class="scene">
+      <h1 class="end-title">投资生涯结束</h1>
+      <p class="end-subtitle" id="end-subtitle">从25岁到65岁，共40年</p>
+
+      <div class="evaluation-card" id="evaluation-card">
+        <div class="evaluation-title" id="eval-title">百万富翁</div>
+        <div class="evaluation-desc" id="eval-desc">描述</div>
+        <div class="evaluation-score" id="eval-score">财富评分: 350</div>
+      </div>
+
+      <div class="final-stats">
+        <h3>最终财务状况</h3>
+        <div id="final-stats-list"></div>
+      </div>
+
+      <div class="life-log">
+        <h3>人生大事记</h3>
+        <div id="life-log-list"></div>
+      </div>
+
+      <button class="btn" id="btn-restart">重新开始</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/game.js"></script>
+</body>
+</html>
