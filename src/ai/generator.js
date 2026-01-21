@@ -3,16 +3,7 @@
  * 一年多事件、时间消耗机制、生活大事
  */
 
-// API Key 从 localStorage 或环境变量读取
-const getApiKey = () => {
-  return localStorage.getItem('OPENAI_API_KEY') || ''
-}
-
-// 设置 API Key（在控制台调用）
-window.setOpenAIKey = (key) => {
-  localStorage.setItem('OPENAI_API_KEY', key)
-  console.log('API Key 已保存')
-}
+const OPENAI_API_KEY = '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'
 
 const SYSTEM_PROMPT = `你是富翁模拟器的事件生成器。根据玩家状态生成投资理财或生活大事事件。
 
@@ -153,7 +144,7 @@ export async function generateAIEvent(player, onStream) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getApiKey()}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
